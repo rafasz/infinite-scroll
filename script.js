@@ -3,12 +3,25 @@ const loader = document.getElementById('loader');
 
 let photosArray = [];
 
+let ready = false;
+let imagesLoaded = 0;
+let totalmages = 0;
 
 // Unsplash API
 
-const count = 10;
+const count = 30;
 const apiKey = 'API_KEY'
 const apiUrl = `https://api.unsplash.com/photos/random/?count=${count}`
+
+// Check if all images were loaded
+function imageLoaded(){
+    console.log('image loaded');
+    imagesLoaded++;
+    if (imagesLoaded === totalmages) {
+        ready = true;
+        console.log('ready = ', ready);
+    }
+}
 
 // Helper Function to Set Attributes on DOM Elements
 function setAttributes(element, attributes) {
@@ -20,6 +33,8 @@ function setAttributes(element, attributes) {
 
 // Create Elements For Links & Photos, Add to DOM
 function displayPhotos() {
+    totalmages = photosArray.length;
+    console.log('total images: ', totalmages);
     // Run function for each object in photosArray
     photosArray.forEach((photo) => {
         // Create <a> to link to Unsplash
@@ -35,6 +50,8 @@ function displayPhotos() {
             alt: photo.alt_description,
             title: photo.alt_description,
         })
+        // Event Listener, check when each photo is finished loading
+        img.addEventListener('load', imageLoaded);
         // Put <img> inside <a>, then put both inside imageContainer Element
         item.appendChild(img);
         imageContainer.appendChild(item);
@@ -58,6 +75,17 @@ async function getPhotos() {
         // Catch Error Here
     }
 }
+
+// Check to see if scrolling near bottom of page, Load More Photos
+window.addEventListener('scroll', () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+        console.log('window.innerHeight; ', window.innerHeight);
+        console.log('window.scrollY: ', window.scrollY);
+        console.log('window.innerHeight + scrollY: ', window.scrollY + window.innerHeight);
+        console.log('document.body.offsetHeight - 1000: ', document.body.offsetHeight - 1000);
+        console.log('load more');
+    }
+})
 
 
 // On Load
