@@ -3,12 +3,25 @@ const loader = document.getElementById('loader');
 
 let photosArray = [];
 
+let ready = false;
+let imagesLoaded = 0;
+let totalmages = 0;
 
 // Unsplash API
 
-const count = 10;
+// Set numPhotos to 5 to speed up initial page load time
+let numPhotos = 5;
 const apiKey = 'API_KEY'
-const apiUrl = `https://api.unsplash.com/photos/random/?count=${count}`
+const apiUrl = `https://api.unsplash.com/photos/random/?count=`
+
+// Check if all images were loaded
+function imageLoaded(){
+    imagesLoaded++;
+    if (imagesLoaded === totalmages) {
+        ready = true;
+        loader.hidden = true;
+    }
+}
 
 // Helper Function to Set Attributes on DOM Elements
 function setAttributes(element, attributes) {
@@ -20,7 +33,8 @@ function setAttributes(element, attributes) {
 
 // Create Elements For Links & Photos, Add to DOM
 function displayPhotos() {
-    // Run function for each object in photosArray
+    imagesLoaded = 0;
+    totalmages = photosArray.length;
     photosArray.forEach((photo) => {
         // Create <a> to link to Unsplash
         const item = document.createElement('a');
@@ -35,6 +49,8 @@ function displayPhotos() {
             alt: photo.alt_description,
             title: photo.alt_description,
         })
+        // Event Listener, check when each photo is finished loading
+        img.addEventListener('load', imageLoaded);
         // Put <img> inside <a>, then put both inside imageContainer Element
         item.appendChild(img);
         imageContainer.appendChild(item);
@@ -47,18 +63,33 @@ let headers = new Headers({
 
 // Get photos from Unsplash API
 
-async function getPhotos() {
+async function getPhotos(numPhotos) {
     try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch(`${apiUrl}${numPhotos}`, {
             headers: headers
         });
         photosArray = await response.json();
         displayPhotos();
     } catch (error) {
-        // Catch Error Here
+        loader.hidden = true;
+        const message = document.createElement('p');
+        message.classList.add('error-message');
+        message.innerText = "There was an error connecting to unsplash API - Please reload the page";
+        imageContainer.appendChild(message);
+        
     }
 }
 
+// Check to see if scrolling near bottom of page, Load More Photos
+window.addEventListener('scroll', () => {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000 && ready) {
+        ready = false;
+        getPhotos(numPhotos);
+    }
+})
+
 
 // On Load
-getPhotos();
+getPhotos(numPhotos);
+// Set numPhotos to 10 after initial page load
+numPhotos = 10;
