@@ -9,17 +9,17 @@ let totalmages = 0;
 
 // Unsplash API
 
-const count = 30;
+// Set numPhotos to 5 to speed up initial page load time
+let numPhotos = 5;
 const apiKey = 'API_KEY'
-const apiUrl = `https://api.unsplash.com/photos/random/?count=${count}`
+const apiUrl = `https://api.unsplash.com/photos/random/?count=`
 
 // Check if all images were loaded
 function imageLoaded(){
-    console.log('image loaded');
     imagesLoaded++;
     if (imagesLoaded === totalmages) {
         ready = true;
-        console.log('ready = ', ready);
+        loader.hidden = true;
     }
 }
 
@@ -33,9 +33,8 @@ function setAttributes(element, attributes) {
 
 // Create Elements For Links & Photos, Add to DOM
 function displayPhotos() {
+    imagesLoaded = 0;
     totalmages = photosArray.length;
-    console.log('total images: ', totalmages);
-    // Run function for each object in photosArray
     photosArray.forEach((photo) => {
         // Create <a> to link to Unsplash
         const item = document.createElement('a');
@@ -64,29 +63,33 @@ let headers = new Headers({
 
 // Get photos from Unsplash API
 
-async function getPhotos() {
+async function getPhotos(numPhotos) {
     try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch(`${apiUrl}${numPhotos}`, {
             headers: headers
         });
         photosArray = await response.json();
         displayPhotos();
     } catch (error) {
-        // Catch Error Here
+        loader.hidden = true;
+        const message = document.createElement('p');
+        message.classList.add('error-message');
+        message.innerText = "There was an error connecting to unsplash API - Please reload the page";
+        imageContainer.appendChild(message);
+        
     }
 }
 
 // Check to see if scrolling near bottom of page, Load More Photos
 window.addEventListener('scroll', () => {
-    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
-        console.log('window.innerHeight; ', window.innerHeight);
-        console.log('window.scrollY: ', window.scrollY);
-        console.log('window.innerHeight + scrollY: ', window.scrollY + window.innerHeight);
-        console.log('document.body.offsetHeight - 1000: ', document.body.offsetHeight - 1000);
-        console.log('load more');
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000 && ready) {
+        ready = false;
+        getPhotos(numPhotos);
     }
 })
 
 
 // On Load
-getPhotos();
+getPhotos(numPhotos);
+// Set numPhotos to 10 after initial page load
+numPhotos = 10;
